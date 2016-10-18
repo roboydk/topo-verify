@@ -1,0 +1,11 @@
+[network-nodes]
+server_1 ansible_ssh_host=127.0.0.1 ansible_ssh_port=2521 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+server_2 ansible_ssh_host=127.0.0.1 ansible_ssh_port=2522 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+server_3 ansible_ssh_host=127.0.0.1 ansible_ssh_port=2523 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+tor_1 ansible_ssh_host=127.0.0.1 ansible_ssh_port=2524 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+tor_2 ansible_ssh_host=127.0.0.1 ansible_ssh_port=2525 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+tor_3 ansible_ssh_host=127.0.0.1 ansible_ssh_port=2526 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+spine_1 ansible_ssh_host=127.0.0.1 ansible_ssh_port=2527 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+spine_2 ansible_ssh_host=127.0.0.1 ansible_ssh_port=2528 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+edge ansible_ssh_host=127.0.0.1 ansible_ssh_port=2529 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+
