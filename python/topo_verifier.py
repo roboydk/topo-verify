@@ -5,15 +5,48 @@ import networkx
 import networkx as nx
 import paramiko
 import re
+import signal
 
 import time
+
+import sys
 import yaml
+
+from functools import wraps
+import errno
+import os
+import signal
+
+
+class TimeoutError(Exception):
+    pass
+
+def handler_function():
+    sys.exit()
+
+def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+    def decorator(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message)
+
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+            return result
+
+        return wraps(func)(wrapper)
+
+    return decorator
 
 from topo_graph import BuildNetworkGraph
 
 fname = '../ansible/ansible_hosts'
 data_file = 'topo_10_nodes.yaml'
-
+device_w_con_problem = []
 
 def find_connected_link(node1, node2):
     l1_all = []
@@ -91,7 +124,7 @@ class TopoVerifier:
         graph_nx = BuildNetworkGraph(data_file).build_graph()
 
         adj = graph_nx.adj
-        print adj
+        # print adj
         for node_sender_id in adj:
 
             for node_receiver_id in adj[node_sender_id]:
@@ -99,62 +132,90 @@ class TopoVerifier:
                     if topo_yaml['nodes'][node_receiver_id]['name'] in devices_online:
                         print 'Checking link {0} ---> {1}'.format(topo_yaml['nodes'][node_sender_id]['name'],
                                                                   topo_yaml['nodes'][node_receiver_id]['name'])
-
                         self.verify_connection(topo_yaml['nodes'][node_sender_id]['name'],
-                                               topo_yaml['nodes'][node_receiver_id]['name'])
-                        time.sleep(0.3)
+                                               topo_yaml['nodes'][node_receiver_id]['name'], 0)
+                        time.sleep(0.1)
         # print dev
-        print devices_online
-        print devices_all
-        print self.dev_connect
+        print "Online and reachable devices {0}".format(devices_online)
+        # print devices_all
+        # print self.dev_connect
+        if len(device_w_con_problem) == 0:
+            print "All links established!"
+        else:
+            print "Device with connection problems in between: {0}".format(device_w_con_problem)
         self.prepare_data_for_graph()
 
-    def verify_connection(self, node_sndr, node_rcvl):
+    @timeout(3, "Something went wrong")
+    def verify_connection(self, node_sndr, node_rcvl, counter):
 
         # Data required to  verify connection
         # On sender side: Interface to Send packet, Destination IP, Source IP, Destination MAC
         # On receiver side: Interface to listen for tcpdump
-        cl_s = paramiko.SSHClient()
-        cl_s.set_missing_host_key_policy(paramiko.WarningPolicy())
-        cl_s.connect(self.dev_connect[node_sndr][0], port=int(self.dev_connect[node_sndr][1]),
-                     username='vagrant')
+        # print device_w_con_problem
+        # print node_sndr + '  ' + node_rcvl
 
-        cl_r = paramiko.SSHClient()
-        cl_r.set_missing_host_key_policy(paramiko.WarningPolicy())
-        cl_r.connect(self.dev_connect[node_rcvl][0], port=int(self.dev_connect[node_rcvl][1]),
-                     username='vagrant')
+        try:
+            try:
+                if [node_sndr, node_rcvl] in device_w_con_problem or [node_rcvl, node_sndr] in device_w_con_problem:
+                    sys.exit()
+                cl_s = paramiko.SSHClient()
+                cl_s.set_missing_host_key_policy(paramiko.WarningPolicy())
+                cl_s.connect(self.dev_connect[node_sndr][0], port=int(self.dev_connect[node_sndr][1]),
+                             username='vagrant', password='vagrant')
 
-        for el in hosts_w_macs[node_sndr].keys():
-            if el in hosts_w_macs[node_rcvl].keys():
-                link = el
-        exec_command_r = 'sudo tcpdump -i {0} -c 10'.format(hosts_w_macs[node_rcvl][link][0])
-        cl_r.exec_command('sudo ifconfig {0} up'.format(hosts_w_macs[node_rcvl][link][0]))
-        stdin_r, stdout_r, stderr_r = cl_r.exec_command(exec_command_r)
+                cl_r = paramiko.SSHClient()
+                cl_r.set_missing_host_key_policy(paramiko.WarningPolicy())
+                cl_r.connect(self.dev_connect[node_rcvl][0], port=int(self.dev_connect[node_rcvl][1]),
+                             username='vagrant', password='vagrant')
+            except:
+                pass
+            for el in hosts_w_macs[node_sndr].keys():
+                if el in hosts_w_macs[node_rcvl].keys():
+                    link = el
 
-        cl_s.exec_command('sudo ip addr flush dev {0}'.format(hosts_w_macs[node_sndr][link][0]))
-        cl_s.exec_command('sudo ifconfig {0} up'.format(hosts_w_macs[node_sndr][link][0]))
+            exec_command_r = 'sudo tcpdump -i {0} -c 10 '.format(hosts_w_macs[node_rcvl][link][0])
+            # cl_r.exec_command('sudo ifconfig {0} up'.format(hosts_w_macs[node_rcvl][link][0]))
+            stdin_r, stdout_r, stderr_r = cl_r.exec_command(exec_command_r)
 
-        for k in range(0, 30):
-            exec_command_s = 'sudo ./send-raw -i {0} -s {1} -d {2} -m {3}' \
-                .format(hosts_w_macs[node_sndr][link][0], '255.255.255.254', '255.255.255.255',
-                        hosts_w_macs[node_rcvl][link][1])
-            cl_s.exec_command(exec_command_s)
-            k += 1
+            stdin_s, stdout_s, stderr_s = \
+                cl_s.exec_command('sudo ip addr flush dev {0}'.format(hosts_w_macs[node_sndr][link][0]))
+            # cl_s.exec_command('sudo ifconfig {0} up'.format(hosts_w_macs[node_sndr][link][0]))
 
-        # # Debug section
-        # print 'Link between devices is ' + link
-        # print 'sudo ifconfig {0} up'.format(hosts_w_macs[node_sndr][link][0])
-        # print 'sudo ip addr flush dev {0}'.format(hosts_w_macs[node_sndr][link][0])
-        # print exec_command_s
-        # print exec_command_r
+            for k in range(0, 30):
+                exec_command_s = 'sudo ./send-raw -i {0} -s {1} -d {2} -m {3}' \
+                    .format(hosts_w_macs[node_sndr][link][0], '255.255.255.254', '255.255.255.255',
+                            hosts_w_macs[node_rcvl][link][1])
+                cl_s.exec_command(exec_command_s)
+                k += 1
 
-        if len([m.start() for m in
-                re.finditer('IP 255.255.255.254 > 255.255.255.255: ICMP echo request', stdout_r.read())]) >= 5:
-            print 'Link  {0} --->  {1} established'.format(node_sndr, node_rcvl)
-        else:
-            print 'Sorry, there is some problem'
-        cl_s.close()
-        cl_r.close()
+            # # Debug section
+            # print 'Link between devices is ' + link
+            # print 'sudo ifconfig {0} up'.format(hosts_w_macs[node_sndr][link][0])
+            # print 'sudo ip addr flush dev {0}'.format(hosts_w_macs[node_sndr][link][0])
+            # print exec_command_s
+            # print exec_command_r
+
+            if len([m.start() for m in
+                    re.finditer('IP 255.255.255.254 > 255.255.255.255: ICMP echo request', stdout_r.read())]) >= 5:
+                print '   Link  {0} --->  {1} '.format(node_sndr, node_rcvl) + u'\u2713'.encode('utf8')
+                # print 'Link  {0} --->  {1} established'.format(node_sndr, node_rcvl)
+            else:
+                print 'Sorry, there is some problem'
+                device_w_con_problem.append([node_sndr, node_rcvl])
+
+            cl_s.close()
+            cl_r.close()
+        except:
+            # print '{0} try'.format(counter)
+            counter += 1
+            if counter < 5:
+                self.verify_connection(node_sndr, node_rcvl, counter)
+            else:
+                if [node_rcvl, node_sndr] not in device_w_con_problem:
+                    device_w_con_problem.append([node_sndr, node_rcvl])
+                print "There was 3 tries to establish link. Moving on"
+            pass
+
 
     @staticmethod
     def prepare_data_for_graph():
@@ -174,7 +235,6 @@ class TopoVerifier:
 
             edges = []
             for k in adj:
-                # print k
                 for v in adj[k]:
                     # print '{0} pings {1}'.format(k, v)
                     if k < v:

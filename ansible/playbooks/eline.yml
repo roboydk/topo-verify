@@ -1,0 +1,4 @@
+---
+- include: device_setup.yml
+- include: device_software.yml
+- include: device_verification.yml

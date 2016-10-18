@@ -1,0 +1,12 @@
+---
+- hosts: network-nodes
+  gather_facts: yes
+  become: yes
+
+  tasks:
+
+    - name: copy send-raw file to send packets
+      copy: src=../../scripts/send-raw dest=/home/vagrant/send-raw owner=vagrant mode=755 force=yes
+
+    - name: install the latest version of tcpdump
+      apt: name=tcpdump state=latest

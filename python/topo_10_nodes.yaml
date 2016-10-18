@@ -1,0 +1,140 @@
+name: 10 nodes
+
+orchestration: vagrant
+
+nodes:
+
+  - name: server_1
+    type: tgen
+    os: linux_ubuntu
+    box: ubuntu/trusty64
+    mgmt_ip: localhost
+    ports:
+       - type: ssh
+         value: 2521
+    interfaces:
+      - interface: eth1
+        link-name: link1
+
+  - name: server_2
+    type: tgen
+    os: linux_ubuntu
+    box: ubuntu/trusty64
+    mgmt_ip: localhost
+    ports:
+       - type: ssh
+         value: 2522
+    interfaces:
+      - interface: eth1
+        link-name: link2
+
+  - name: server_3
+    type: tgen
+    os: linux_ubuntu
+    box: ubuntu/trusty64
+    mgmt_ip: localhost
+    ports:
+       - type: ssh
+         value: 2523
+    interfaces:
+      - interface: eth1
+        link-name: link3
+
+  - name: tor_1
+    type: tgen
+    os: linux_ubuntu
+    box: ubuntu/trusty64
+    mgmt_ip: localhost
+    ports:
+       - type: ssh
+         value: 2524
+    interfaces:
+      - interface: eth1
+        link-name: link1
+      - interface: eth2
+        link-name: link4
+      - interface: eth3
+        link-name: link5
+
+  - name: tor_2
+    type: tgen
+    os: linux_ubuntu
+    box: ubuntu/trusty64
+    mgmt_ip: localhost
+    ports:
+       - type: ssh
+         value: 2525
+    interfaces:
+      - interface: eth1
+        link-name: link2
+      - interface: eth2
+        link-name: link6
+      - interface: eth3
+        link-name: link7
+
+  - name: tor_3
+    type: tgen
+    os: linux_ubuntu
+    box: ubuntu/trusty64
+    mgmt_ip: localhost
+    ports:
+       - type: ssh
+         value: 2526
+    interfaces:
+      - interface: eth1
+        link-name: link3
+      - interface: eth2
+        link-name: link8
+      - interface: eth3
+        link-name: link9
+
+  - name: spine_1
+    type: tgen
+    os: linux_ubuntu
+    box: ubuntu/trusty64
+    mgmt_ip: localhost
+    ports:
+       - type: ssh
+         value: 2527
+    interfaces:
+      - interface: eth1
+        link-name: link4
+      - interface: eth2
+        link-name: link6
+      - interface: eth3
+        link-name: link8
+      - interface: eth4
+        link-name: link10
+
+  - name: spine_2
+    type: tgen
+    os: linux_ubuntu
+    box: ubuntu/trusty64
+    mgmt_ip: localhost
+    ports:
+       - type: ssh
+         value: 2528
+    interfaces:
+      - interface: eth1
+        link-name: link5
+      - interface: eth2
+        link-name: link7
+      - interface: eth3
+        link-name: link9
+      - interface: eth4
+        link-name: link11
+
+
+  - name: edge
+    type: tgen
+    os: linux_ubuntu
+    box: ubuntu/trusty64
+    mgmt_ip: localhost
+    ports:
+       - type: ssh
+         value: 2529
+    interfaces:
+      - interface: eth1
+        link-name: link10
+      - interface: eth2
+        link-name: link11

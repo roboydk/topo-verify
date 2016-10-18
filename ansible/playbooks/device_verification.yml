@@ -1,0 +1,6 @@
+---
+- hosts: network-nodes
+  gather_facts: yes
+  become: yes
+
+  tasks:

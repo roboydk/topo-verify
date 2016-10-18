@@ -1,0 +1,94 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+  config.vm.box_check_update = false
+  # nodes section
+
+
+  # node server_1
+  config.vm.define "server_1" do |server_1|
+    server_1.vm.box = "ubuntu/trusty64"
+    server_1.vm.hostname = "server-1"
+    server_1.vm.network "forwarded_port",guest: 22, host: 2521, auto_correct: true
+    server_1.vm.network :private_network, auto_config: false, virtualbox__intnet: "link1"
+  end
+
+  # node server_2
+  config.vm.define "server_2" do |server_2|
+    server_2.vm.box = "ubuntu/trusty64"
+    server_2.vm.hostname = "server-2"
+    server_2.vm.network "forwarded_port",guest: 22, host: 2522, auto_correct: true
+    server_2.vm.network :private_network, auto_config: false, virtualbox__intnet: "link2"
+  end
+
+  # node server_3
+  config.vm.define "server_3" do |server_3|
+    server_3.vm.box = "ubuntu/trusty64"
+    server_3.vm.hostname = "server-3"
+    server_3.vm.network "forwarded_port",guest: 22, host: 2523, auto_correct: true
+    server_3.vm.network :private_network, auto_config: false, virtualbox__intnet: "link3"
+  end
+
+  # node tor_1
+  config.vm.define "tor_1" do |tor_1|
+    tor_1.vm.box = "ubuntu/trusty64"
+    tor_1.vm.hostname = "tor-1"
+    tor_1.vm.network "forwarded_port",guest: 22, host: 2524, auto_correct: true
+    tor_1.vm.network :private_network, auto_config: false, virtualbox__intnet: "link1"
+    tor_1.vm.network :private_network, auto_config: false, virtualbox__intnet: "link4"
+    tor_1.vm.network :private_network, auto_config: false, virtualbox__intnet: "link5"
+  end
+
+  # node tor_2
+  config.vm.define "tor_2" do |tor_2|
+    tor_2.vm.box = "ubuntu/trusty64"
+    tor_2.vm.hostname = "tor-2"
+    tor_2.vm.network "forwarded_port",guest: 22, host: 2525, auto_correct: true
+    tor_2.vm.network :private_network, auto_config: false, virtualbox__intnet: "link2"
+    tor_2.vm.network :private_network, auto_config: false, virtualbox__intnet: "link6"
+    tor_2.vm.network :private_network, auto_config: false, virtualbox__intnet: "link7"
+  end
+
+  # node tor_3
+  config.vm.define "tor_3" do |tor_3|
+    tor_3.vm.box = "ubuntu/trusty64"
+    tor_3.vm.hostname = "tor-3"
+    tor_3.vm.network "forwarded_port",guest: 22, host: 2526, auto_correct: true
+    tor_3.vm.network :private_network, auto_config: false, virtualbox__intnet: "link3"
+    tor_3.vm.network :private_network, auto_config: false, virtualbox__intnet: "link8"
+    tor_3.vm.network :private_network, auto_config: false, virtualbox__intnet: "link9"
+  end
+
+  # node spine_1
+  config.vm.define "spine_1" do |spine_1|
+    spine_1.vm.box = "ubuntu/trusty64"
+    spine_1.vm.hostname = "spine-1"
+    spine_1.vm.network "forwarded_port",guest: 22, host: 2527, auto_correct: true
+    spine_1.vm.network :private_network, auto_config: false, virtualbox__intnet: "link4"
+    spine_1.vm.network :private_network, auto_config: false, virtualbox__intnet: "link6"
+    spine_1.vm.network :private_network, auto_config: false, virtualbox__intnet: "link8"
+    spine_1.vm.network :private_network, auto_config: false, virtualbox__intnet: "link10"
+  end
+
+  # node spine_2
+  config.vm.define "spine_2" do |spine_2|
+    spine_2.vm.box = "ubuntu/trusty64"
+    spine_2.vm.hostname = "spine-2"
+    spine_2.vm.network "forwarded_port",guest: 22, host: 2528, auto_correct: true
+    spine_2.vm.network :private_network, auto_config: false, virtualbox__intnet: "link5"
+    spine_2.vm.network :private_network, auto_config: false, virtualbox__intnet: "link7"
+    spine_2.vm.network :private_network, auto_config: false, virtualbox__intnet: "link9"
+    spine_2.vm.network :private_network, auto_config: false, virtualbox__intnet: "link11"
+  end
+
+  # node edge
+  config.vm.define "edge" do |edge|
+    edge.vm.box = "ubuntu/trusty64"
+    edge.vm.hostname = "edge"
+    edge.vm.network "forwarded_port",guest: 22, host: 2529, auto_correct: true
+    edge.vm.network :private_network, auto_config: false, virtualbox__intnet: "link10"
+    edge.vm.network :private_network, auto_config: false, virtualbox__intnet: "link11"
+  end
+
+end
