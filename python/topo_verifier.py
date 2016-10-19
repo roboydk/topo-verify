@@ -174,12 +174,12 @@ class TopoVerifier:
                     link = el
 
             exec_command_r = 'sudo tcpdump -i {0} -c 10 '.format(hosts_w_macs[node_rcvl][link][0])
-            # cl_r.exec_command('sudo ifconfig {0} up'.format(hosts_w_macs[node_rcvl][link][0]))
+            cl_r.exec_command('sudo ifconfig {0} up'.format(hosts_w_macs[node_rcvl][link][0]))
             stdin_r, stdout_r, stderr_r = cl_r.exec_command(exec_command_r)
 
             stdin_s, stdout_s, stderr_s = \
                 cl_s.exec_command('sudo ip addr flush dev {0}'.format(hosts_w_macs[node_sndr][link][0]))
-            # cl_s.exec_command('sudo ifconfig {0} up'.format(hosts_w_macs[node_sndr][link][0]))
+            cl_s.exec_command('sudo ifconfig {0} up'.format(hosts_w_macs[node_sndr][link][0]))
 
             for k in range(0, 30):
                 exec_command_s = 'sudo ./send-raw -i {0} -s {1} -d {2} -m {3}' \

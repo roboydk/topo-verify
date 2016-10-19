@@ -1,6 +1,9 @@
 ## topo-verify
 Low level Topology verification using Packet injection.
 
+### Required staff to run. 
+
+Minimum 2 VM to start (1gb of RAM) in Vagrant and Vagrant itself. 
 
 ### How to use it:
 
