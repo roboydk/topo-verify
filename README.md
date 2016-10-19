@@ -34,3 +34,14 @@ python topo-verifier.py
 ```
 
 You will have output of all available devices and will have list of devices with connection issue in between. 
+
+- Graph visualization (optional step)
+
+Run python http server from **graph** folder. 
+
+```shell
+cd graph/
+python -m SimpleHTTPServer 8000
+```
+
+Open browser and go to http://localhost:8000/index.html Enjoy!
