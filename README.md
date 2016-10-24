@@ -5,7 +5,7 @@ Low level Topology verification using Packet injection.
 ## Requirements
 
 - Minimum 2 VM to start (1gb of RAM) in Vagrant and Vagrant itself.
-- The following Python dependencies `pip install paramiko networkx pyyaml`.
+- Install Python dependencies `pip install -r requirements.txt`.
 
 ## How to use it:
 
