@@ -1,11 +1,7 @@
-
 import io
 
-import networkx
-import networkx as nx
 import paramiko
 import re
-import signal
 
 import time
 
@@ -16,13 +12,16 @@ from functools import wraps
 import errno
 import os
 import signal
+from topo_graph import BuildNetworkGraph
 
 
 class TimeoutError(Exception):
     pass
 
+
 def handler_function():
     sys.exit()
+
 
 def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
     def decorator(func):
@@ -42,11 +41,6 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
 
     return decorator
 
-from topo_graph import BuildNetworkGraph
-
-fname = '../ansible/ansible_hosts'
-data_file = 'topo_10_nodes.yaml'
-device_w_con_problem = []
 
 def find_connected_link(node1, node2):
     l1_all = []
@@ -62,6 +56,9 @@ def find_connected_link(node1, node2):
             pass
 
 
+hosts_file = sys.argv[1]
+data_file = sys.argv[2]
+device_w_con_problem = []
 hosts_w_macs = {}
 with open(data_file, 'r') as stream:
     topo_yaml = (yaml.load(stream))
@@ -69,7 +66,7 @@ with open(data_file, 'r') as stream:
 
 class TopoVerifier:
     def __init__(self):
-        with open(fname) as f:
+        with open(hosts_file) as f:
             content = f.readlines()
             content.remove(content[0])
             self.dev_connect = {}
@@ -216,7 +213,6 @@ class TopoVerifier:
                 print "There was 3 tries to establish link. Moving on"
             pass
 
-
     @staticmethod
     def prepare_data_for_graph():
         G = BuildNetworkGraph(data_file).build_graph()
@@ -241,7 +237,6 @@ class TopoVerifier:
                         edges.append([k, v])
             edges_str = ''
             for e in edges:
-
                 ind1 = next(index for (index, d) in enumerate(topo_yaml['nodes'])
                             if d["name"] == G.nodes(data=True)[e[0]][1]['node_data']['name'])
                 ind2 = next(index for (index, d) in enumerate(topo_yaml['nodes'])
@@ -253,18 +248,8 @@ class TopoVerifier:
             f.write(' ], edges: [ ')
             f.write(edges_str[:-2])
             f.write(" ]};")
-            # var dataset =  { nodes: [
-            #     {name: "rtr1"},
-            #     {name: "rtr2"}
-            # ],
-            #     edges: [
-            #         {source: 0, target: 1}
-            #     ]
-            # };
             f.close()
 
 
+
 TopoVerifier()
-
-
-

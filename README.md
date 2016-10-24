@@ -27,10 +27,11 @@ cd topo-verify/python && vagrant up
 cd ../ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook playbooks/eline.yml -i ansible_hosts
 ```
 
-- Execute the python script
+- Execute the python script. You should pass 2 parameters to script.
+ File with all hosts and topology in YAML format.
 
 ```shell
-cd ../python && python topo_verifier.py
+cd ../python && python topo_verifier.py ../ansible/ansible_hosts topo_10_nodes.yaml
 ```
 
 You will have output of all available devices and will have list of devices with connection issue in between.
