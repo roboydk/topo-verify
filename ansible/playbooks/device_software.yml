@@ -8,5 +8,8 @@
     - name: copy send-raw file to send packets
       copy: src=../../scripts/send-raw dest=/home/vagrant/send-raw owner=vagrant mode=755 force=yes
 
+    - name: copy python sender file to send packets
+      copy: src=../../scripts/sendeth.py dest=/home/vagrant/sendeth.py owner=vagrant mode=755 force=yes
+
     - name: install the latest version of tcpdump
       apt: name=tcpdump state=latest
