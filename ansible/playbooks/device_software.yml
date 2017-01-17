@@ -1,15 +1,16 @@
 ---
 - hosts: network-nodes
   gather_facts: yes
-  become: yes
+#  become: yes
 
   tasks:
 
-    - name: copy send-raw file to send packets
-      copy: src=../../scripts/send-raw dest=/home/vagrant/send-raw owner=vagrant mode=755 force=yes
+    - name: Ensures scripts dir exists
+      file: path=/home/{{username}}/scripts state=directory
 
     - name: copy python sender file to send packets
-      copy: src=../../scripts/sendeth.py dest=/home/vagrant/sendeth.py owner=vagrant mode=755 force=yes
+      copy: src=../../scripts/ dest=/home/{{username}}/scripts
 
-    - name: install the latest version of tcpdump
-      apt: name=tcpdump state=latest
+#    - name: install the latest version of tcpdump
+#      apt: name=tcpdump state=latest
+

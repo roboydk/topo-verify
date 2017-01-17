@@ -1,0 +1,25 @@
+---
+- hosts: network-nodes
+  gather_facts: no
+
+  tasks:
+    - name: Ensures .ssh dir exists
+      file: path=/home/{{username}}/.ssh state=directory
+
+    - stat: path=/.ssh/authorized_keys
+      register: p
+
+    - name: create empty file
+      file: path=/home/{{username}}/.ssh/authorized_keys
+            owner={{username}}
+            state={{ "file" if  p.stat.exists else "touch"}}
+
+    - name: copy public part of key
+      copy: src=~/.ssh/id_rsa.pub dest=/home/{{username}}/id_rsa.pub owner={{username}} mode=755 force=yes
+    - name: append key to authorized keys
+      shell: cat /home/{{username}}/id_rsa.pub >> /home/{{username}}/.ssh/authorized_keys
+
+
+
+
+

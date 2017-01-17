@@ -1,12 +1,15 @@
 from socket import *
 import sys
+""""
+Send raw Ethernet packet on interface.
+How to use?
+    sudo python sendeth.py  <d-mac>  <nic-dev>
+    Ex:
+    sudo python sendeth.py  08:00:27:55:57:de  eth1
+"""
 
 
 def sendeth(ethernet_packet, payload, interface="eth1"):
-    """" Send raw Ethernet packet on interface.
-    sudo python sendeth.py  08:00:27:55:57:de  eth1
-    """
-
     s = socket(AF_PACKET, SOCK_RAW)
 
     # From the docs: "For raw packet
