@@ -10,9 +10,8 @@ import os
 import signal
 from topo_graph import BuildNetworkGraph
 from netmiko import ConnectHandler
-from paramiko import SSHClient, AutoAddPolicy, WarningPolicy
+from paramiko import SSHClient, AutoAddPolicy
 from scp import SCPClient
-
 """
 2 source file for verifier:
 
@@ -130,7 +129,7 @@ class TopoVerifier:
         # self.verify_connection_udp()
         # self.virl_topo_verify()
 
-        self.verify_connection_raw()
+        self.vagrant_topo_verify()
 
     def lldp_verify(self):
         print 'Start checking LLDP connections'
@@ -286,7 +285,6 @@ class TopoVerifier:
         # for f_l in fine_links:
         #     print f_l + u' \u2713'.encode('utf8')
 
-
     def vagrant_topo_verify(self):
         for dev in devices_all:
             try:
@@ -328,15 +326,15 @@ class TopoVerifier:
         for node_sender_id in adj:
 
             for node_receiver_id in adj[node_sender_id]:
-                if topo_yaml['nodes'][node_sender_id]['name'] in self.devices_online:
-                    if topo_yaml['nodes'][node_receiver_id]['name'] in self.devices_online:
+                if topo_yaml['nodes'][node_sender_id]['name'] in devices_online:
+                    if topo_yaml['nodes'][node_receiver_id]['name'] in devices_online:
                         print 'Checking link {0} ---> {1}'.format(topo_yaml['nodes'][node_sender_id]['name'],
                                                                   topo_yaml['nodes'][node_receiver_id]['name'])
                         self.verify_connection_raw(topo_yaml['nodes'][node_sender_id]['name'],
                                                    topo_yaml['nodes'][node_receiver_id]['name'], 0)
                         time.sleep(0.1)
         # print dev
-        print "Online and reachable devices {0}".format(self.devices_online)
+        print "Online and reachable devices {0}".format(devices_online)
         # print devices_all
         # print self.dev_connect
         if len(device_w_con_problem) == 0:
@@ -353,20 +351,20 @@ class TopoVerifier:
         # On receiver side: Interface to listen for tcpdump
         # print device_w_con_problem
         # print node_sndr + '  ' + node_rcvl
-
         try:
             try:
                 if [node_sndr, node_rcvl] in device_w_con_problem or [node_rcvl, node_sndr] in device_w_con_problem:
                     sys.exit()
                 cl_s = SSHClient()
-                cl_s.set_missing_host_key_policy(WarningPolicy())
-                cl_s.connect(self.dev_connect[node_sndr][0], port=int(self.dev_connect[node_sndr][1]),
+                cl_s.set_missing_host_key_policy(AutoAddPolicy())
+                cl_s.connect(dev_connect[node_sndr][0], port=int(dev_connect[node_sndr][1]),
                              username='vagrant', password='vagrant')
 
                 cl_r = SSHClient()
-                cl_r.set_missing_host_key_policy(WarningPolicy())
-                cl_r.connect(self.dev_connect[node_rcvl][0], port=int(self.dev_connect[node_rcvl][1]),
+                cl_r.set_missing_host_key_policy(AutoAddPolicy())
+                cl_r.connect(dev_connect[node_rcvl][0], port=int(dev_connect[node_rcvl][1]),
                              username='vagrant', password='vagrant')
+                # print 'dev sender: {0}, dev receiver {1}'.format(dev_connect[node_sndr][1], dev_connect[node_rcvl][1])
             except:
                 pass
             for el in hosts_w_macs[node_sndr].keys():
@@ -375,20 +373,27 @@ class TopoVerifier:
 
             exec_command_r = 'sudo tcpdump -i {0} -c 10 '.format(hosts_w_macs[node_rcvl][link][0])
             cl_r.exec_command('sudo ifconfig {0} up'.format(hosts_w_macs[node_rcvl][link][0]))
+            # print 'node is {0}, receive command is {1}'.format(hosts_w_macs[node_rcvl], exec_command_r)
+
             stdin_r, stdout_r, stderr_r = cl_r.exec_command(exec_command_r)
 
             stdin_s, stdout_s, stderr_s = \
                 cl_s.exec_command('sudo ip addr flush dev {0}'.format(hosts_w_macs[node_sndr][link][0]))
             cl_s.exec_command('sudo ifconfig {0} up'.format(hosts_w_macs[node_sndr][link][0]))
+            cl_s.exec_command('sudo chmod 755 scripts/send-raw')
+
+            exec_command_s = 'sudo ./scripts/send-raw -i {0} -s {1} -d {2} -m {3}' \
+                .format(hosts_w_macs[node_sndr][link][0], '255.255.255.254', '255.255.255.255',
+                        hosts_w_macs[node_rcvl][link][1])
+
+            # print 'node is {0}, send command is \n {1}'.format(hosts_w_macs[node_sndr], exec_command_s)
 
             for k in range(0, 30):
-                exec_command_s = 'sudo ./send-raw -i {0} -s {1} -d {2} -m {3}' \
-                    .format(hosts_w_macs[node_sndr][link][0], '255.255.255.254', '255.255.255.255',
-                            hosts_w_macs[node_rcvl][link][1])
+
                 cl_s.exec_command(exec_command_s)
                 k += 1
 
-            # # Debug section
+            # Debug section
             # print 'Link between devices is ' + link
             # print 'sudo ifconfig {0} up'.format(hosts_w_macs[node_sndr][link][0])
             # print 'sudo ip addr flush dev {0}'.format(hosts_w_macs[node_sndr][link][0])
