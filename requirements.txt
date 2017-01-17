@@ -1,4 +1,3 @@
-yaml
 netmiko
 paramiko
 networkx
